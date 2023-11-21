@@ -1,118 +1,128 @@
-import inquirer from 'inquirer';
-import cliProgress from 'cli-progress';
-import alert from 'js-cli-alerts';
-import Table from 'cli-table';
-import enquirer from 'enquirer';
-const {prompt, Form} = enquirer;
-const { Confirm } = enquirer;
+import * as p from '@clack/prompts';
+import { setTimeout } from 'node:timers/promises';
+import color from 'picocolors';
 
 
-//for the progress bar
-//const bar1 = new cliProgress.SingleBar({}, cliProgress.Presets.shades_classic);
+async function main() {
+    console.clear();
+    await setTimeout(1000);
 
-const grayPrompt = '\x1b[90m\x1b[1mPress q to go back\x1b[0m';
+    p.intro(`${color.bgCyan(color.black(' Entoothiast '))}`);
 
-function confirmCancellation(){
-  const prompt = new Confirm({
-    name: 'question',
-    message: 'Are you sure you want to cancel this appointment?'
-  });
-  
-  prompt.run()
-    .then(answer => console.log('Answer:', answer))
-    .catch(console.error);
-}
+    const choice = await p.select({
+        message: `What would you like to do?`,
+        options: [
+            { value: 'login', label: 'Login', hint: 'Do you already have an account?' },
+            { value: 'register', label: 'Register' },
+        ],
+    });
 
-
-//TODO: go back to main menu when q is pressed
-function printGrayPrompt() {
-  console.log(grayPrompt);
-}
-let table = new Table({
-  head: ['Date', 'Time', 'Patient', 'Notes'],
-  chars: { 'top': '═' , 'top-mid': '╤' , 'top-left': '╔' , 'top-right': '╗'
-         , 'bottom': '═' , 'bottom-mid': '╧' , 'bottom-left': '╚' , 'bottom-right': '╝'
-         , 'left': '║' , 'left-mid': '╟' , 'mid': '─' , 'mid-mid': '┼'
-         , 'right': '║' , 'right-mid': '╢' , 'middle': '│' }
-});
-
-table.push(
-  ['11/12/2023', '15.20', 'Mary Joe', 'Regular check-up']
-, ['14/10/2023', '17.00', 'Karen Smith', 'Wisdom tooth removal',]
-);
-
-
-const options = [
-  'View upcoming appointments',
-  'View calendar',
-  'Publish new time slot',
-  'Cancel an appointment',
-  'Exit',
-];
-// alert({type: `success`, msg: `Everything finished!`});
-// alert({type: `success`, msg: `Everything finished!`, name: `DONE`});
-// alert({type: `warning`, msg: `You didn't add something!`});
-// alert({type: `info`, msg: `Awais is awesome!`});
-// alert({type: `error`, msg: `Something went wrong!`});
-console.log("Welcome to Entoothiast!");
-
-function createTimeslot(){
-  //TODO: add check for date and time formats
-  const prompt = new Form({
-    name: 'user',
-    message: 'Please provide the following information to publish a new time slot:',
-    choices: [
-      { name: 'date', message: 'Date', initial: '30/09/2023' },
-      { name: 'time', message: 'Time', initial: '15:30' }
-    ]
-  });
-  
-  prompt.run()
-    .then(value => console.log("New timeslot published"))
-    .catch(console.error);
-}
-
-//TODO: loop main menu
-function mainMenu(){
-  inquirer
-  .prompt([
-    {
-      type: 'list',
-      name: 'selectedOption',
-      message: 'Select an option:',
-      choices: options,
-    },
-  ])
-  .then((answers) => {
-    switch (answers.selectedOption){
-      case "View upcoming appointments":
-        console.log(table.toString());
-        printGrayPrompt();
-        break;
-      case "Publish new time slot":
-        //alert({type: 'success', msg: "New time slot published!"});
-        createTimeslot();
-        printGrayPrompt();
-        break;
-      case "Cancel an appointment":
-        let result = confirmCancellation()
-        if (result == true){
-          alert({type: 'success', msg: "Appointment cancelled"});
-        }
-        printGrayPrompt();
-        break;
-      case "Exit":
-        console.log("See you soon!")
-        break;
+    if (choice === 'login') {
+        await loginUser();
+    } else if (choice === 'register') {
+        await registerUser();
     }
-  });
 }
 
-mainMenu()
+async function loginUser() {
+    p.intro(`${color.bgGreen(color.black(' Login '))}`);
+    const email = await p.text({
+        message: 'Enter your email:',
+        validate: (value) => {
+            if (!value || !value.includes('@')) return 'Please enter a valid email address.';
+        },
+    });
+    const password = await p.password({
+        message: 'Enter your password:',
+        validate: (value) => {
+            if (!value) return 'Please enter a password.';
+            if (value.length < 5) return 'Password should have at least 5 characters.';
+        },
+    });
+    p.outro('Logged in successfully!');
+    await showMenu();
+}
 
+async function registerUser() {
+    p.intro(`${color.bgGreen(color.black(' Register '))}`);
+    const email = await p.text({
+        message: 'Enter your new email:',
+        validate: (value) => {
+            if (!value || !value.includes('@')) return 'Please enter a valid email address.';
+        },
+    });
+    const password = await p.password({
+        message: 'Enter your new password:',
+        validate: (value) => {
+            if (!value) return 'Please enter a password.';
+            if (value.length < 5) return 'Password should have at least 5 characters.';
+        },
+    });
+    p.outro('Registered successfully!');
+    await showMenu();
+}
 
-  
+async function showMenu() {
+    const menuChoice = await p.select({
+        message: 'Choose an option:',
+        options: [
+            { value: 'view', label: 'View upcoming appointments' },
+            { value: 'publish', label: 'Publish a new timeslot' },
+            { value: 'cancel', label: 'Cancel an appointment' },
+            { value: 'delete', label: 'Delete a published timeslot' },
+            { value: 'logout', label: 'Log out' },
+			{value: 'exit', label: 'Exit'},
+        ],
+    });
 
+    switch (menuChoice) {
+        case 'view':
+			p.intro(`${color.bgBlue(color.black(' View upcoming appointments '))}`);
+            // Handle view upcoming appointments
+            break;
+        case 'publish':
+			p.intro(`${color.bgBlue(color.black(' Publish a new available timeslot '))}`);
+    		const date = await p.text({
+				placeholder: '2023-11-21',
+        		message: 'Enter the date (YYYY-MM-DD):',
+        	validate: (value) => {
+            	if (!value.match(/^\d{4}-\d{2}-\d{2}$/)) return 'Please enter a valid date in the format YYYY-MM-DD.';
+        	},
+   		 });
+    		const time = await p.text({
+				placeholder: '09:00 AM',
+        		message: 'Enter the time (HH:MM AM/PM):',
+        	validate: (value) => {
+            	if (!value.match(/^\d{2}:\d{2} (AM|PM)$/i)) return 'Please enter a valid time in the format HH:MM AM/PM.';
+        	},
+   		 });
+    		p.outro(`Timeslot published for ${date} at ${time}`);
+    		await showMenu();
+            break;
+        case 'cancel':
+			p.intro(`${color.bgBlue(color.black(' Cancel an appointment '))}`);
+            // Handle cancel an appointment
+            break;
+        case 'delete':
+			p.intro(`${color.bgBlue(color.black(' Delete an appointment '))}`);
+            // Handle delete a published timeslot
+            break;
+        case 'logout':
+            p.outro('See you soon!');
+            main().catch(console.error);
+            break;
+		case 'exit':
+			console.clear();
+			p.outro('Thank you for using Entoothiast!');
+			setTimeout(1000);
+            process.exit(0);
+            break;
+        default:
+            break;
+    }
+}
+
+main().catch(console.error);
 
 
 
