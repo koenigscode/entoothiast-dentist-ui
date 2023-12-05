@@ -26,10 +26,10 @@ async function main() {
 
 async function loginUser() {
     p.intro(`${color.bgGreen(color.black(' Login '))}`);
-    const email = await p.text({
-        message: 'Enter your email:',
+    const username = await p.text({
+        message: 'Enter your username:',
         validate: (value) => {
-            if (!value || !value.includes('@')) return 'Please enter a valid email address.';
+            if (!value || value.trim().length == 0) return 'Please enter a valid username.';
         },
     });
     const password = await p.password({
@@ -45,10 +45,10 @@ async function loginUser() {
 
 async function registerUser() {
     p.intro(`${color.bgGreen(color.black(' Register '))}`);
-    const email = await p.text({
-        message: 'Enter your new email:',
+    const username = await p.text({
+        message: 'Enter your new username:',
         validate: (value) => {
-            if (!value || !value.includes('@')) return 'Please enter a valid email address.';
+            if (!value || value.trim().length == 0) return 'Please enter a valid username.';
         },
     });
     const password = await p.password({
@@ -71,50 +71,50 @@ async function showMenu() {
             { value: 'cancel', label: 'Cancel an appointment' },
             { value: 'delete', label: 'Delete a published timeslot' },
             { value: 'logout', label: 'Log out' },
-			{value: 'exit', label: 'Exit'},
+            { value: 'exit', label: 'Exit' },
         ],
     });
 
     switch (menuChoice) {
         case 'view':
-			p.intro(`${color.bgBlue(color.black(' View upcoming appointments '))}`);
+            p.intro(`${color.bgBlue(color.black(' View upcoming appointments '))}`);
             // Handle view upcoming appointments
             break;
         case 'publish':
-			p.intro(`${color.bgBlue(color.black(' Publish a new available timeslot '))}`);
-    		const date = await p.text({
-				placeholder: '2023-11-21',
-        		message: 'Enter the date (YYYY-MM-DD):',
-        	validate: (value) => {
-            	if (!value.match(/^\d{4}-\d{2}-\d{2}$/)) return 'Please enter a valid date in the format YYYY-MM-DD.';
-        	},
-   		 });
-    		const time = await p.text({
-				placeholder: '09:00 AM',
-        		message: 'Enter the time (HH:MM AM/PM):',
-        	validate: (value) => {
-            	if (!value.match(/^\d{2}:\d{2} (AM|PM)$/i)) return 'Please enter a valid time in the format HH:MM AM/PM.';
-        	},
-   		 });
-    		p.outro(`Timeslot published for ${date} at ${time}`);
-    		await showMenu();
+            p.intro(`${color.bgBlue(color.black(' Publish a new available timeslot '))}`);
+            const date = await p.text({
+                placeholder: '2023-11-21',
+                message: 'Enter the date (YYYY-MM-DD):',
+                validate: (value) => {
+                    if (!value.match(/^\d{4}-\d{2}-\d{2}$/)) return 'Please enter a valid date in the format YYYY-MM-DD.';
+                },
+            });
+            const time = await p.text({
+                placeholder: '09:00 AM',
+                message: 'Enter the time (HH:MM AM/PM):',
+                validate: (value) => {
+                    if (!value.match(/^\d{2}:\d{2} (AM|PM)$/i)) return 'Please enter a valid time in the format HH:MM AM/PM.';
+                },
+            });
+            p.outro(`Timeslot published for ${date} at ${time}`);
+            await showMenu();
             break;
         case 'cancel':
-			p.intro(`${color.bgBlue(color.black(' Cancel an appointment '))}`);
+            p.intro(`${color.bgBlue(color.black(' Cancel an appointment '))}`);
             // Handle cancel an appointment
             break;
         case 'delete':
-			p.intro(`${color.bgBlue(color.black(' Delete an appointment '))}`);
+            p.intro(`${color.bgBlue(color.black(' Delete an appointment '))}`);
             // Handle delete a published timeslot
             break;
         case 'logout':
             p.outro('See you soon!');
             main().catch(console.error);
             break;
-		case 'exit':
-			console.clear();
-			p.outro('Thank you for using Entoothiast!');
-			setTimeout(1000);
+        case 'exit':
+            console.clear();
+            p.outro('Thank you for using Entoothiast!');
+            setTimeout(1000);
             process.exit(0);
             break;
         default:
