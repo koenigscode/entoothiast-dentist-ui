@@ -1,7 +1,15 @@
 import * as p from '@clack/prompts';
 import { setTimeout } from 'node:timers/promises';
 import color from 'picocolors';
+import 'dotenv/config'
+import axios from "axios";
 
+const api = axios.create({
+    baseURL: process.env.API_URL,
+    timeout: 1000,
+});
+
+const state = {}
 
 async function main() {
     console.clear();
@@ -25,22 +33,43 @@ async function main() {
 }
 
 async function loginUser() {
-    p.intro(`${color.bgGreen(color.black(' Login '))}`);
-    const username = await p.text({
-        message: 'Enter your username:',
-        validate: (value) => {
-            if (!value || value.trim().length == 0) return 'Please enter a valid username.';
-        },
-    });
-    const password = await p.password({
-        message: 'Enter your password:',
-        validate: (value) => {
-            if (!value) return 'Please enter a password.';
-            if (value.length < 5) return 'Password should have at least 5 characters.';
-        },
-    });
-    p.outro('Logged in successfully!');
-    await showMenu();
+    let loggedIn = false
+
+    while (!loggedIn) {
+        p.intro(`${color.bgGreen(color.black(' Login '))}`);
+
+        const username = await p.text({
+            message: 'Enter your username:',
+            validate: (value) => {
+                if (!value || value.trim().length == 0) return 'Please enter a valid username.';
+            },
+        });
+
+        const password = await p.password({
+            message: 'Enter your password:',
+            validate: (value) => {
+                if (!value) return 'Please enter a password.';
+                if (value.length < 5) return 'Password should have at least 5 characters.';
+            },
+        });
+
+        try {
+            const { data, status } = await api.post("/users/login", { username, password })
+            if (status === 200) {
+                state.token = data.token;
+                console.log(state.token)
+                p.outro('Logged in successfully!');
+                loggedIn = true
+                await showMenu();
+            } else {
+                p.outro('Invalid username or password! Try again.');
+            }
+        } catch (error) {
+            p.outro('Invalid username or password! Try again.');
+        }
+
+    }
+
 }
 
 async function registerUser() {
