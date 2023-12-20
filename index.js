@@ -139,14 +139,36 @@ async function showMenu() {
                     if (!value.match(/^\d{4}-\d{2}-\d{2}$/)) return 'Please enter a valid date in the format YYYY-MM-DD.';
                 },
             });
-            const time = await p.text({
-                placeholder: '09:00 AM',
-                message: 'Enter the time (HH:MM AM/PM):',
+            const start = await p.text({
+                placeholder: '14:00:00',
+                message: 'Enter the starting time (HH:MM:SS) of a new timeslot:',
                 validate: (value) => {
-                    if (!value.match(/^\d{2}:\d{2} (AM|PM)$/i)) return 'Please enter a valid time in the format HH:MM AM/PM.';
+                    //if (!value.match(/^\d{2}:\d{2}$/i)) return 'Please enter a valid time in the format HH:MM AM/PM.';
                 },
             });
-            p.outro(`Timeslot published for ${date} at ${time}`);
+            const end = await p.text({
+                placeholder: '15:00:00',
+                message: 'Enter the ending time (HH:MM:SS) of a new timeslot:',
+                validate: (value) => {
+                    //if (!value.match(/^\d{2}:\d{2}$/)) return 'Please enter a valid time in the format HH:MM AM/PM.';
+                },
+            });
+            try {
+                //get dentistid
+                //get the times in the needed format "2023-12-05 13:00:00"
+                const start_time = date + " " + start
+                console.log(start_time)
+                const end_time = date + " " + end
+                console.log(end_time)
+                const { status } = await api.post("/dentists/dentistId/timeslots", { start_time, end_time })
+                if (status === 201) {
+                    p.outro(`Timeslot published for ${date} at ${time}`);
+                } else {
+                    p.outro('All fields have to be filled.');
+                }
+            } catch (error) {
+                p.outro('All fields have to be filled');
+            }
             await showMenu();
             break;
         case 'cancel':
