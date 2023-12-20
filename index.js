@@ -9,6 +9,12 @@ const api = axios.create({
     timeout: 1000,
 });
 
+api.interceptors.request.use(config => {
+    if (state.token !== undefined)
+        config.headers.Authorization = `Bearer ${state.token}`;
+    return config;
+});
+
 const state = {}
 
 async function main() {
@@ -57,7 +63,6 @@ async function loginUser() {
             const { data, status } = await api.post("/users/login", { username, password })
             if (status === 200) {
                 state.token = data.token;
-                console.log(state.token)
                 p.outro('Logged in successfully!');
                 loggedIn = true
                 await showMenu();
