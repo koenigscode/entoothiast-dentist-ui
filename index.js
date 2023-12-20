@@ -78,7 +78,16 @@ async function loginUser() {
 }
 
 async function registerUser() {
+    let registered = false
+
+    while (!registered) {
     p.intro(`${color.bgGreen(color.black(' Register '))}`);
+    const name = await p.text({
+        message: 'Enter your name:',
+        validate: (value) => {
+            if (!value || value.trim().length == 0) return 'Please enter a valid username.';
+        },
+    });
     const username = await p.text({
         message: 'Enter your new username:',
         validate: (value) => {
@@ -92,8 +101,20 @@ async function registerUser() {
             if (value.length < 5) return 'Password should have at least 5 characters.';
         },
     });
-    p.outro('Registered successfully!');
-    await showMenu();
+
+    try {
+        const role = 'dentist'
+        const {status } = await api.post("/users/register", { username, password, name, role })
+        if (status === 201) {
+            p.outro('Registered successfully! You can login now');
+            await loginUser()
+        } else {
+            p.outro('This user already exists or some fields are left empty.');
+        }
+    } catch (error) {
+        p.outro('This user already exists or some fields are left empty');
+    }
+}
 }
 
 async function showMenu() {
