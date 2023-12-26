@@ -4,6 +4,7 @@ import color from 'picocolors';
 import 'dotenv/config'
 import axios from "axios";
 
+
 const api = axios.create({
     baseURL: process.env.API_URL,
     timeout: 1000,
@@ -159,19 +160,17 @@ async function showMenu() {
                 },
             });
             try {
-                //get dentistid
                 //get the times in the needed format "2023-12-05 13:00:00"
                 const start_time = date + " " + start
-                console.log(start_time)
                 const end_time = date + " " + end
-                console.log(end_time)
-                const { status } = await api.post("/dentists/dentistId/timeslots", { start_time, end_time })
+                const { status } = await api.post(`/dentists/timeslots`, { start_time, end_time })
                 if (status === 201) {
-                    p.outro(`Timeslot published for ${date} at ${time}`);
+                    p.outro(`Timeslot published for ${date} starting at ${start} until ${end}`);
                 } else {
                     p.outro('All fields have to be filled.');
                 }
             } catch (error) {
+                console.log(error)
                 p.outro('All fields have to be filled');
             }
             await showMenu();
