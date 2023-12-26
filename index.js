@@ -149,14 +149,14 @@ async function showMenu() {
                 placeholder: '14:00:00',
                 message: 'Enter the starting time (HH:MM:SS) of a new timeslot:',
                 validate: (value) => {
-                    //if (!value.match(/^\d{2}:\d{2}$/i)) return 'Please enter a valid time in the format HH:MM AM/PM.';
+                    if (!value.match(/^\d{2}:\d{2}:\d{2}$/i)) return 'Please enter a valid time in the format HH:MM:SS.';
                 },
             });
             const end = await p.text({
                 placeholder: '15:00:00',
                 message: 'Enter the ending time (HH:MM:SS) of a new timeslot:',
                 validate: (value) => {
-                    //if (!value.match(/^\d{2}:\d{2}$/)) return 'Please enter a valid time in the format HH:MM AM/PM.';
+                    if (!value.match(/^\d{2}:\d{2}:\d{2}$/i)) return 'Please enter a valid time in the format HH:MM:SS.';
                 },
             });
             try {
