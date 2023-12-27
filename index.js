@@ -134,7 +134,26 @@ async function showMenu() {
     switch (menuChoice) {
         case 'view':
             p.intro(`${color.bgBlue(color.black(' View upcoming appointments '))}`);
-            // Handle view upcoming appointments
+            try {
+                const { status, data } = await api.get(`/appointments`);
+        
+                if (status === 200) {
+                    if (data.appointments.length > 0) {
+                        const formattedAppointments = data.appointments.map(appointment => {
+                            return `Appointment ID: ${appointment.id}, Dentist ID: ${appointment.dentist_id}, Patient ID: ${appointment.patient_id}, Confirmed: ${appointment.confirmed ? 'Yes' : 'No'}, Cancelled: ${appointment.cancelled ? 'Yes' : 'No'}`;
+                        });
+                        p.outro(formattedAppointments.join('\n'));
+                    } else {
+                        p.outro('No upcoming appointments found.');
+                    }
+                } else {
+                    p.outro('Failed to retrieve appointments.');
+                }
+            } catch (error) {
+                console.log(error);
+                p.outro('Error occurred while fetching appointments.');
+            }
+            await showMenu();
             break;
         case 'publish':
             p.intro(`${color.bgBlue(color.black(' Publish a new available timeslot '))}`);
