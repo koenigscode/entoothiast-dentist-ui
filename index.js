@@ -150,10 +150,12 @@ async function showMenu() {
                     //get the starting time and ending time from timeslots
                     if (data.appointments.length > 0) {
                         data.appointments.forEach(appointment => {
+                            const startTime = new Date(appointment.start_time).toLocaleString();
+                            const endTime = new Date(appointment.end_time).toLocaleString();
                             table.push([
-                                appointment.patient_id,
-                                appointment.timeslot_id,
-                                appointment.dentist_id,
+                                appointment.patient_name,
+                                startTime,
+                                endTime,
                                 appointment.confirmed ? 'Yes' : 'No',
                                 appointment.cancelled ? 'Yes' : 'No'
                             ]);
