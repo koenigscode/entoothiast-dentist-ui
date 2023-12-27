@@ -3,6 +3,7 @@ import { setTimeout } from 'node:timers/promises';
 import color from 'picocolors';
 import 'dotenv/config'
 import axios from "axios";
+import Table from 'cli-table';
 
 
 const api = axios.create({
@@ -15,6 +16,14 @@ api.interceptors.request.use(config => {
         config.headers.Authorization = `Bearer ${state.token}`;
     return config;
 });
+
+var table = new Table({
+    chars: { 'top': '═' , 'top-mid': '╤' , 'top-left': '╔' , 'top-right': '╗'
+           , 'bottom': '═' , 'bottom-mid': '╧' , 'bottom-left': '╚' , 'bottom-right': '╝'
+           , 'left': '║' , 'left-mid': '╟' , 'mid': '─' , 'mid-mid': '┼'
+           , 'right': '║' , 'right-mid': '╢' , 'middle': '│' }, 
+    head: [`Patient name`, `Starting time`, 'Ending time', `Confirmed`, `Cancelled`]
+  });
 
 const state = {}
 
@@ -138,11 +147,19 @@ async function showMenu() {
                 const { status, data } = await api.get(`/appointments`);
         
                 if (status === 200) {
+                    //get the starting time and ending time from timeslots
                     if (data.appointments.length > 0) {
-                        const formattedAppointments = data.appointments.map(appointment => {
-                            return `Appointment ID: ${appointment.id}, Dentist ID: ${appointment.dentist_id}, Patient ID: ${appointment.patient_id}, Confirmed: ${appointment.confirmed ? 'Yes' : 'No'}, Cancelled: ${appointment.cancelled ? 'Yes' : 'No'}`;
+                        data.appointments.forEach(appointment => {
+                            table.push([
+                                appointment.patient_id,
+                                appointment.timeslot_id,
+                                appointment.dentist_id,
+                                appointment.confirmed ? 'Yes' : 'No',
+                                appointment.cancelled ? 'Yes' : 'No'
+                            ]);
                         });
-                        p.outro(formattedAppointments.join('\n'));
+                        console.log(table.toString())
+                        return 
                     } else {
                         p.outro('No upcoming appointments found.');
                     }
