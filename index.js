@@ -18,12 +18,14 @@ api.interceptors.request.use(config => {
 });
 
 var table = new Table({
-    chars: { 'top': '═' , 'top-mid': '╤' , 'top-left': '╔' , 'top-right': '╗'
-           , 'bottom': '═' , 'bottom-mid': '╧' , 'bottom-left': '╚' , 'bottom-right': '╝'
-           , 'left': '║' , 'left-mid': '╟' , 'mid': '─' , 'mid-mid': '┼'
-           , 'right': '║' , 'right-mid': '╢' , 'middle': '│' }, 
+    chars: {
+        'top': '═', 'top-mid': '╤', 'top-left': '╔', 'top-right': '╗'
+        , 'bottom': '═', 'bottom-mid': '╧', 'bottom-left': '╚', 'bottom-right': '╝'
+        , 'left': '║', 'left-mid': '╟', 'mid': '─', 'mid-mid': '┼'
+        , 'right': '║', 'right-mid': '╢', 'middle': '│'
+    },
     head: [`Patient name`, `Starting time`, 'Ending time', `Confirmed`, `Cancelled`]
-  });
+});
 
 const state = {}
 
@@ -65,7 +67,7 @@ async function loginUser() {
             message: 'Enter your password:',
             validate: (value) => {
                 if (!value) return 'Please enter a password.';
-                if (value.length < 5) return 'Password should have at least 5 characters.';
+                if (value.length < 4) return 'Password should have at least 4 characters.';
             },
         });
 
@@ -92,40 +94,64 @@ async function registerUser() {
     let registered = false
 
     while (!registered) {
-    p.intro(`${color.bgGreen(color.black(' Register '))}`);
-    const name = await p.text({
-        message: 'Enter your name:',
-        validate: (value) => {
-            if (!value || value.trim().length == 0) return 'Please enter a valid username.';
-        },
-    });
-    const username = await p.text({
-        message: 'Enter your new username:',
-        validate: (value) => {
-            if (!value || value.trim().length == 0) return 'Please enter a valid username.';
-        },
-    });
-    const password = await p.password({
-        message: 'Enter your new password:',
-        validate: (value) => {
-            if (!value) return 'Please enter a password.';
-            if (value.length < 5) return 'Password should have at least 5 characters.';
-        },
-    });
+        p.intro(`${color.bgGreen(color.black(' Register '))}`);
+        const name = await p.text({
+            message: 'Enter your name:',
+            validate: (value) => {
+                if (!value || value.trim().length == 0) return 'Please enter a valid username.';
+            },
+        });
+        const username = await p.text({
+            message: 'Enter your new username:',
+            validate: (value) => {
+                if (!value || value.trim().length == 0) return 'Please enter a valid username.';
+            },
+        });
+        const password = await p.password({
+            message: 'Enter your new password:',
+            validate: (value) => {
+                if (!value) return 'Please enter a password.';
+                if (value.length < 5) return 'Password should have at least 5 characters.';
+            },
+        });
 
-    try {
-        const role = 'dentist'
-        const {status } = await api.post("/users/register", { username, password, name, role })
-        if (status === 201) {
-            p.outro('Registered successfully! You can login now');
-            await loginUser()
-        } else {
-            p.outro('This user already exists or some fields are left empty.');
+        try {
+            const role = 'dentist'
+            const { status } = await api.post("/users/register", { username, password, name, role })
+            if (status === 201) {
+                p.outro('Registered successfully! You can login now');
+                await loginUser()
+            } else {
+                p.outro('This user already exists or some fields are left empty.');
+            }
+        } catch (error) {
+            p.outro('This user already exists or some fields are left empty');
         }
-    } catch (error) {
-        p.outro('This user already exists or some fields are left empty');
     }
 }
+
+async function viewLogs() {
+    try {
+        const { data, status } = await api.get(`/logs?limit=100`)
+        if (status !== 200) {
+            console.log("Something went wrong when trying to fetch the logs")
+            return
+        }
+
+        const logTable = new Table({
+            head: ["Timestamp", "Topic", "Payload"],
+            colWidths: [30, 50, 50]
+        });
+
+        data.logs.forEach(log => logTable.push([new Date(log.timestamp).toLocaleString(), log.topic, log.payload]))
+        console.log(logTable.toString())
+        await showMenu()
+
+    } catch (err) {
+        console.log(err)
+        console.log("An error occured when trying to fetch the logs")
+    }
+
 }
 
 async function showMenu() {
@@ -137,6 +163,7 @@ async function showMenu() {
             { value: 'publish', label: 'Publish a new timeslot' },
             { value: 'cancel', label: 'Cancel an appointment' },
             { value: 'delete', label: 'Delete a published timeslot' },
+            { value: 'logs', label: 'View logs' },
             { value: 'logout', label: 'Log out' },
             { value: 'exit', label: 'Exit' },
         ],
@@ -145,29 +172,29 @@ async function showMenu() {
     switch (menuChoice) {
         case 'update':
             p.intro(`${color.bgYellow(color.black(' Update Account Details '))}`);
-            
+
             const newUsername = await p.text({
                 message: 'Enter new username:',
                 validate: (value) => {
                     if (!value || value.trim().length === 0) return 'Please enter a valid username.';
                 },
             });
-            
+
             const newName = await p.text({
                 message: 'Enter new name:',
                 validate: (value) => {
                     if (!value || value.trim().length === 0) return 'Please enter a valid name.';
                 },
             });
-            
+
             const newData = {
                 username: newUsername,
                 name: newName
             };
-            
+
             try {
                 const { status, data } = await api.patch(`/users/${state.userId}`, newData);
-            
+
                 if (status === 200) {
                     p.outro('Account details updated successfully:', data);
                 } else {
@@ -182,7 +209,7 @@ async function showMenu() {
             p.intro(`${color.bgBlue(color.black(' View upcoming appointments '))}`);
             try {
                 const { status, data } = await api.get(`/appointments`);
-        
+
                 if (status === 200) {
                     //get the starting time and ending time from timeslots
                     if (data.appointments.length > 0) {
@@ -198,7 +225,7 @@ async function showMenu() {
                             ]);
                         });
                         console.log(table.toString())
-                        return 
+                        return
                     } else {
                         p.outro('No upcoming appointments found.');
                     }
@@ -257,6 +284,10 @@ async function showMenu() {
         case 'delete':
             p.intro(`${color.bgBlue(color.black(' Delete an appointment '))}`);
             // Handle delete a published timeslot
+            break;
+        case 'logs':
+            p.intro(`${color.bgBlue(color.black(' View logs '))}`);
+            await viewLogs()
             break;
         case 'logout':
             p.outro('See you soon!');
