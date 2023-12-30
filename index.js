@@ -22,7 +22,7 @@ var table = new Table({
            , 'bottom': '═' , 'bottom-mid': '╧' , 'bottom-left': '╚' , 'bottom-right': '╝'
            , 'left': '║' , 'left-mid': '╟' , 'mid': '─' , 'mid-mid': '┼'
            , 'right': '║' , 'right-mid': '╢' , 'middle': '│' }, 
-    head: [`Patient name`, `Starting time`, 'Ending time', `Confirmed`, `Cancelled`]
+    head: [`Appointment id`, `Patient name`, `Starting time`, 'Ending time', `Confirmed`, `Cancelled`]
   });
 
 const state = {}
@@ -65,7 +65,7 @@ async function loginUser() {
             message: 'Enter your password:',
             validate: (value) => {
                 if (!value) return 'Please enter a password.';
-                if (value.length < 5) return 'Password should have at least 5 characters.';
+                if (value.length < 4) return 'Password should have at least 4 characters.';
             },
         });
 
@@ -108,7 +108,7 @@ async function registerUser() {
         message: 'Enter your new password:',
         validate: (value) => {
             if (!value) return 'Please enter a password.';
-            if (value.length < 5) return 'Password should have at least 5 characters.';
+            if (value.length < 4) return 'Password should have at least 4 characters.';
         },
     });
 
@@ -143,16 +143,20 @@ async function showMenu() {
     switch (menuChoice) {
         case 'view':
             p.intro(`${color.bgBlue(color.black(' View upcoming appointments '))}`);
+            let confirmed_count = 0;
             try {
                 const { status, data } = await api.get(`/appointments`);
         
                 if (status === 200) {
-                    //get the starting time and ending time from timeslots
                     if (data.appointments.length > 0) {
                         data.appointments.forEach(appointment => {
                             const startTime = new Date(appointment.start_time).toLocaleString();
                             const endTime = new Date(appointment.end_time).toLocaleString();
+                            if (appointment.confirmed === false){
+                                confirmed_count = confirmed_count + 1;
+                            }
                             table.push([
+                                appointment.appointment_id,
                                 appointment.patient_name,
                                 startTime,
                                 endTime,
@@ -161,7 +165,37 @@ async function showMenu() {
                             ]);
                         });
                         console.log(table.toString())
-                        return 
+                        table.length = 0
+                        if (confirmed_count === 0){
+                            console.log("All your appointments are confirmed")
+                        } else { 
+                            console.log(`You still haven't confirmed ${confirmed_count} appointments. `)
+                            const edit = await p.confirm({
+                                message: 'Would you like to confirm your upcoming appointments?',
+                              });
+                            if (edit === false){
+                                await showMenu()
+                                break
+                            }
+                            else if (edit === true){
+                                const id = await p.text({
+                                    message: 'Enter the id of an appointment that you want to confirm',
+                                    validate: (value) => {
+                                        if (!value) return 'Please enter an id';
+                                    },
+                                });
+    
+                                try{
+                                    const confirmed = true
+                                    const { status, data } = await api.patch(`/appointments/${id}`, {confirmed});
+                                    if (status === 200){
+                                        p.outro(`Appointment ${id} confirmed`);
+                                    } 
+                                } catch (error){
+                                    p.outro("An error occurred when confirming an appointment")
+                                }
+                            }
+                        }
                     } else {
                         p.outro('No upcoming appointments found.');
                     }
