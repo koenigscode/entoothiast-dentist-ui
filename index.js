@@ -17,6 +17,36 @@ api.interceptors.request.use(config => {
     return config;
 });
 
+let confirmed_count = 0;
+
+async function getAppointments(){
+    try {
+        const { status, data } = await api.get(`/appointments`);
+
+        if (status === 200) {
+            if (data.appointments.length > 0) {
+                data.appointments.forEach(appointment => {
+                    const startTime = new Date(appointment.start_time).toLocaleString();
+                    const endTime = new Date(appointment.end_time).toLocaleString();
+                    if (appointment.confirmed === false){
+                        confirmed_count = confirmed_count + 1;
+                    }
+                    table.push([
+                        appointment.appointment_id,
+                        appointment.patient_name,
+                        startTime,
+                        endTime,
+                        appointment.confirmed ? 'Yes' : 'No',
+                        appointment.cancelled ? 'Yes' : 'No'
+                    ]);
+                });
+                console.log(table.toString())}
+            }
+        } catch (error){
+            p.outro("Something went wrong when fetching your appointments")
+        }
+}
+
 var table = new Table({
     chars: { 'top': '═' , 'top-mid': '╤' , 'top-left': '╔' , 'top-right': '╗'
            , 'bottom': '═' , 'bottom-mid': '╧' , 'bottom-left': '╚' , 'bottom-right': '╝'
@@ -143,7 +173,6 @@ async function showMenu() {
     switch (menuChoice) {
         case 'view':
             p.intro(`${color.bgBlue(color.black(' View upcoming appointments '))}`);
-            let confirmed_count = 0;
             try {
                 const { status, data } = await api.get(`/appointments`);
         
@@ -250,6 +279,64 @@ async function showMenu() {
         case 'cancel':
             p.intro(`${color.bgBlue(color.black(' Cancel an appointment '))}`);
             // Handle cancel an appointment
+            try {
+                const { status, data } = await api.get(`/appointments`);
+        
+                if (status === 200) {
+                    if (data.appointments.length > 0) {
+                        data.appointments.forEach(appointment => {
+                            const startTime = new Date(appointment.start_time).toLocaleString();
+                            const endTime = new Date(appointment.end_time).toLocaleString();
+                            if (appointment.confirmed === false){
+                                confirmed_count = confirmed_count + 1;
+                            }
+                            table.push([
+                                appointment.appointment_id,
+                                appointment.patient_name,
+                                startTime,
+                                endTime,
+                                appointment.confirmed ? 'Yes' : 'No',
+                                appointment.cancelled ? 'Yes' : 'No'
+                            ]);
+                        });
+                        console.log(table.toString())
+                        table.length = 0
+                            const cancel = await p.confirm({
+                                message: 'Would you like to cancel any of your upcoming appointments?',
+                              });
+                            if (cancel === false){
+                                await showMenu()
+                                break
+                            }
+                            else if (cancel === true){
+                                const id = await p.text({
+                                    message: 'Enter the id of an appointment that you want to cancel',
+                                    validate: (value) => {
+                                        if (!value) return 'Please enter an id';
+                                    },
+                                });
+    
+                                try{
+                                    const cancelled = true
+                                    const { status, data } = await api.patch(`/appointments/${id}`, {cancelled});
+                                    if (status === 200){
+                                        p.outro(`Appointment ${id} cancelled`);
+                                        await showMenu()
+                                    } 
+                                } catch (error){
+                                    p.outro("An error occurred when cancelling an appointment")
+                                }
+                            }
+                    } else {
+                        p.outro('No upcoming appointments found.');
+                    }
+                } else {
+                    p.outro('Failed to retrieve appointments.');
+                }
+            } catch (error) {
+                console.log(error);
+                p.outro('Error occurred while fetching appointments.');
+            }
             break;
         case 'delete':
             p.intro(`${color.bgBlue(color.black(' Delete an appointment '))}`);
