@@ -73,6 +73,7 @@ async function loginUser() {
             const { data, status } = await api.post("/users/login", { username, password })
             if (status === 200) {
                 state.token = data.token;
+                state.userId = data.user.id;
                 p.outro('Logged in successfully!');
                 loggedIn = true
                 await showMenu();
@@ -131,6 +132,7 @@ async function showMenu() {
     const menuChoice = await p.select({
         message: 'Choose an option:',
         options: [
+            { value: 'update', label: 'Update account details' },
             { value: 'view', label: 'View upcoming appointments' },
             { value: 'publish', label: 'Publish a new timeslot' },
             { value: 'cancel', label: 'Cancel an appointment' },
@@ -141,6 +143,41 @@ async function showMenu() {
     });
 
     switch (menuChoice) {
+        case 'update':
+            p.intro(`${color.bgYellow(color.black(' Update Account Details '))}`);
+            
+            const newUsername = await p.text({
+                message: 'Enter new username:',
+                validate: (value) => {
+                    if (!value || value.trim().length === 0) return 'Please enter a valid username.';
+                },
+            });
+            
+            const newName = await p.text({
+                message: 'Enter new name:',
+                validate: (value) => {
+                    if (!value || value.trim().length === 0) return 'Please enter a valid name.';
+                },
+            });
+            
+            const newData = {
+                username: newUsername,
+                name: newName
+            };
+            
+            try {
+                const { status, data } = await api.patch(`/users/${state.userId}`, newData);
+            
+                if (status === 200) {
+                    p.outro('Account details updated successfully:', data);
+                } else {
+                    p.outro('Failed to update account details.');
+                }
+            } catch (error) {
+                console.error('Failed to update account details:', error.message);
+            }
+            await showMenu();
+            break;
         case 'view':
             p.intro(`${color.bgBlue(color.black(' View upcoming appointments '))}`);
             try {
