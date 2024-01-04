@@ -202,24 +202,24 @@ async function showMenu() {
     switch (menuChoice) {
         case 'update':
             p.intro(`${color.bgYellow(color.black(' Update Account Details '))}`);
-
-            const newUsername = await p.text({
-                message: 'Enter new username:',
-                validate: (value) => {
-                    if (!value || value.trim().length === 0) return 'Please enter a valid username.';
-                },
+            
+            const fieldToUpdate = await p.select({
+                message: 'Which field do you want to update?',
+                options: [
+                    { value: 'username', label: 'Username' },
+                    { value: 'name', label: 'Name' },
+                ],
             });
-
-            const newName = await p.text({
-                message: 'Enter new name:',
+        
+            const newValue = await p.text({
+                message: `Enter the new value for ${fieldToUpdate}:`,
                 validate: (value) => {
-                    if (!value || value.trim().length === 0) return 'Please enter a valid name.';
+                    if (!value || value.trim().length === 0) return `Please enter a valid ${fieldToUpdate}.`;
                 },
             });
 
             const newData = {
-                username: newUsername,
-                name: newName
+                [fieldToUpdate]: newValue,
             };
 
             try {
