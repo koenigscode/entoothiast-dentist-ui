@@ -215,6 +215,68 @@ async function addClinic() {
     }
 
 
+async function getAllClinics() {
+    try {
+        const { data, status } =  await api.get(`/clinics`)
+        if (status !== 200){
+            console.log("Something went wrong when trying to fetch the clinics")
+            return
+        }
+        const clinicTable = new Table({
+            head: ["id", "Name", "Latitude", "Longitude"],
+        });
+
+        data.clinics.forEach(clinic => clinicTable.push([clinic.id, clinic.name, clinic.latitude, clinic.longitude]))
+        console.log(clinicTable.toString())
+        await removeClinic()
+    } catch (error) {
+        console.log(error)
+        console.log("An error occurred when trying to fetch the clinics")
+    }
+}
+
+
+
+async function removeClinic(){
+    var id;
+    p.intro(`${color.bgGreen(color.black(' Delete an existing clinic '))}`);
+    id = await p.text({
+        message: 'Enter the id of a clinic you want to delete:',
+        placeholder: "111",
+        validate: (value) => {
+            if (!value || value.trim().length === 0) {
+                return 'Please enter a valid ID.';
+            }
+            const parsedValue = parseFloat(value.trim());
+            if (isNaN(parsedValue) || parsedValue <= 0 || !Number.isInteger(parsedValue)) {
+                return 'Please enter a valid positive integer ID.';
+            }
+        },
+        },
+    );
+     const deleteClinic = await p.confirm({
+        message: `Are you sure you want to delete clinic with this id ${id}?`,
+      });
+    if (deleteClinic === true){
+        try {
+            const { status } =  await api.delete(`/clinics/${id}`)
+            if (status !== 200){
+                console.log("Something went wrong when deleting the clinic")
+                return
+            }
+
+            p.outro("The clinic was successfully deleted!")
+            await showAdminMenu()
+    } catch(error){
+        console.log("An error occurred when deleting this clinic")
+    }
+    } else {
+        await showAdminMenu()
+    }
+}
+
+    
+       
 async function viewLogs() {
     try {
         const { data, status } = await api.get(`/logs?limit=100`)
@@ -257,7 +319,8 @@ async function showAdminMenu() {
             await addClinic()
             break;
         case 'removeClinic':
-            // Implement the logic for removing a clinic
+            p.intro(`${color.bgBlue(color.black(' Delete an existing clinic '))}`);
+            await getAllClinics();
             break;
         case 'logout':
             p.outro('See you soon!');
