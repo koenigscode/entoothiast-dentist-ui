@@ -166,6 +166,55 @@ async function registerUser() {
     }
 }
 
+async function addClinic() {
+
+    p.intro(`${color.bgGreen(color.black(' Create a new clinic '))}`);
+    const name = await p.text({
+        message: 'Enter the name of the new clinic:',
+        placeholder: "NewClinic",
+        validate: (value) => {
+            if (!value || value.trim().length == 0) return 'Please enter a valid username.';
+        },
+    });
+    const regex = /^\d{2}\.\d{6}$/;
+    const latitude = await p.text({
+        message: 'Enter the latitude of this clinic:',
+        placeholder: "23.345678",
+        validate: (value) => {
+            if (!value || value.trim().length == 0) return 'Please enter the coordinates of this clinic - only latitude.';
+            if (!regex.test(value.trim())) {
+                return 'Invalid latitude format';
+            }
+        },
+    });
+    const longitude = await p.text({
+        message: 'Enter the longitude of this clinic:',
+        placeholder: "23.456789",
+        validate: (value) => {
+            if (!value || value.trim().length == 0) return 'Please enter the coordinates of this clinic - only longitude.';
+            if (!regex.test(value.trim())) {
+                return 'Invalid longitude format';
+            }
+        },
+    });
+
+        try {
+            const { status } = await api.post(`/clinics`, { name, latitude, longitude})
+            if (status === 201) {
+                p.outro('Successfully created a new clinic!');
+                await showAdminMenu()
+            } else {
+                console.log("it goes to else")
+                p.outro('This clinic already exists or some fields were left empty.');
+            }
+        } catch (error) {
+            console.log('it goes to catch')
+            console.log(error)
+            p.outro('This clinic already exists or some fields were left empty.');
+        }
+    }
+
+
 async function viewLogs() {
     try {
         const { data, status } = await api.get(`/logs?limit=100`)
@@ -196,6 +245,7 @@ async function showAdminMenu() {
         options: [
             { value: 'addClinic', label: 'Add a new clinic' },
             { value: 'removeClinic', label: 'Remove clinic' },
+            { value: 'viewLogs', label: "View logs"},
             { value: 'logout', label: 'Log out' },
             { value: 'exit', label: 'Exit' },
         ],
@@ -203,7 +253,8 @@ async function showAdminMenu() {
 
     switch (adminMenuChoice) {
         case 'addClinic':
-            // Implement the logic for adding a new clinic
+            p.intro(`${color.bgBlue(color.black(' Create a new clinic '))}`);
+            await addClinic()
             break;
         case 'removeClinic':
             // Implement the logic for removing a clinic
@@ -211,6 +262,11 @@ async function showAdminMenu() {
         case 'logout':
             p.outro('See you soon!');
             main().catch(console.error);
+            break;
+        case 'viewLogs':
+            case 'logs':
+            p.intro(`${color.bgBlue(color.black(' View logs '))}`);
+            await viewLogs()
             break;
         case 'exit':
             console.clear();
@@ -237,7 +293,6 @@ async function showMenu() {
             { value: 'viewTimeslots', label: 'View your timeslots' },
             { value: 'cancel', label: 'Cancel an appointment' },
             { value: 'delete', label: 'Delete a published timeslot' },
-            { value: 'logs', label: 'View logs' },
             { value: 'logout', label: 'Log out' },
             { value: 'exit', label: 'Exit' },
         ],
@@ -482,10 +537,6 @@ async function showMenu() {
         case 'delete':
             p.intro(`${color.bgBlue(color.black(' Delete an appointment '))}`);
             // Handle delete a published timeslot
-            break;
-        case 'logs':
-            p.intro(`${color.bgBlue(color.black(' View logs '))}`);
-            await viewLogs()
             break;
         case 'logout':
             p.outro('See you soon!');
