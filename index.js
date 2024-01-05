@@ -226,7 +226,7 @@ async function showMenu() {
                 const { status, data } = await api.patch(`/users/${state.userId}`, newData);
 
                 if (status === 200) {
-                    p.outro('Account details updated successfully:', data);
+                    p.outro('Account details updated successfully!');
                 } else {
                     p.outro('Failed to update account details.');
                 }
