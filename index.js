@@ -106,9 +106,15 @@ async function loginUser() {
             if (status === 200) {
                 state.token = data.token;
                 state.userId = data.user.id;
+                state.userRole = data.user.role;
                 p.outro('Logged in successfully!');
                 loggedIn = true
-                await showMenu();
+             
+                if (state.userRole === 'admin') {
+                    await showAdminMenu();
+                } else {
+                    await showMenu();
+                }
             } else {
                 p.outro('Invalid username or password! Try again.');
             }
@@ -184,7 +190,44 @@ async function viewLogs() {
 
 }
 
+async function showAdminMenu() {
+    const adminMenuChoice = await p.select({
+        message: 'Choose an option:',
+        options: [
+            { value: 'addClinic', label: 'Add a new clinic' },
+            { value: 'removeClinic', label: 'Remove clinic' },
+            { value: 'logout', label: 'Log out' },
+            { value: 'exit', label: 'Exit' },
+        ],
+    });
+
+    switch (adminMenuChoice) {
+        case 'addClinic':
+            // Implement the logic for adding a new clinic
+            break;
+        case 'removeClinic':
+            // Implement the logic for removing a clinic
+            break;
+        case 'logout':
+            p.outro('See you soon!');
+            main().catch(console.error);
+            break;
+        case 'exit':
+            console.clear();
+            p.outro('Thank you for using Entoothiast!');
+            setTimeout(1000);
+            process.exit(0);
+            break;
+        default:
+            break;
+    }
+}
+
+
 async function showMenu() {
+    if (state.userRole === 'admin') {
+        await showAdminMenu();
+    } else {
     const menuChoice = await p.select({
         message: 'Choose an option:',
         options: [
@@ -457,6 +500,7 @@ async function showMenu() {
         default:
             break;
     }
+}
 }
 
 main().catch(console.error);
