@@ -191,6 +191,7 @@ async function showMenu() {
             { value: 'update', label: 'Update account details' },
             { value: 'view', label: 'View upcoming appointments' },
             { value: 'publish', label: 'Publish a new timeslot' },
+            { value: 'viewTimeslots', label: 'View your timeslots' },
             { value: 'cancel', label: 'Cancel an appointment' },
             { value: 'delete', label: 'Delete a published timeslot' },
             { value: 'logs', label: 'View logs' },
@@ -340,6 +341,39 @@ async function showMenu() {
             }
             await showMenu();
             break;
+
+            case 'viewTimeslots':
+                p.intro(`${color.bgBlue(color.black(' View Timeslots '))}`);
+                try {
+                    const { status, data } = await api.get(`/dentists/${state.userId}/timeslots`);
+            
+                    if (status === 200) {
+                        if (data && data.timeslots && data.timeslots.length > 0) {
+                            const timeslotTable = new Table({
+                                head: ["Timeslot ID", "Start Time", "End Time"],
+                                colWidths: [15, 30, 30],
+                            });
+            
+                            data.timeslots.forEach((timeslot) => {
+                                const startTime = new Date(timeslot.start_time).toLocaleString();
+                                const endTime = new Date(timeslot.end_time).toLocaleString();
+            
+                                timeslotTable.push([timeslot.id, startTime, endTime]);
+                            });
+            
+                            console.log(timeslotTable.toString());
+                        } else {
+                            console.log('No timeslots found for the dentist.');
+                        }
+                    } else {
+                        console.log('Failed to retrieve timeslots.');
+                    }
+                } catch (error) {
+                    console.error('Error occurred while fetching timeslots:', error.message);
+                }
+                await showMenu();
+                break;            
+        
         case 'cancel':
             p.intro(`${color.bgBlue(color.black(' Cancel an appointment '))}`);
             // Handle cancel an appointment
