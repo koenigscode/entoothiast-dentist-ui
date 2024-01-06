@@ -449,8 +449,7 @@ async function viewLogs() {
 
 }
 
-
-async function assignDentist(){
+async function viewClinics(){
     try {
         const { data, status } =  await api.get(`/clinics`)
         if (status !== 200){
@@ -469,6 +468,11 @@ async function assignDentist(){
         console.log(error)
         console.log("An error occurred when trying to fetch the clinics")
     }
+}
+
+
+async function assignDentist(){
+    await viewClinics()
     try {
         let assignedCount = 0;
         const { data, status } = await api.get('/dentists')
@@ -562,6 +566,7 @@ async function showAdminMenu() {
         message: 'Choose an option:',
         options: [
             { value: 'addClinic', label: 'Add a new clinic' },
+            { value: 'viewClinics', label: 'View all clinics' },
             { value: 'removeClinic', label: 'Remove clinic' },
             { value: 'viewLogs', label: "View logs"},
             { value: 'editClinic', label: "Edit a clinic"}, 
@@ -575,6 +580,10 @@ async function showAdminMenu() {
         case 'addClinic':
             p.intro(`${color.bgBlue(color.black(' Create a new clinic '))}`);
             await addClinic()
+            break;
+        case 'viewClinics':
+            p.intro(`${color.bgBlue(color.black(' View all clinics '))}`);
+            await viewClinics()
             break;
         case 'removeClinic':
             p.intro(`${color.bgBlue(color.black(' Delete an existing clinic '))}`);
