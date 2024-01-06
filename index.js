@@ -256,126 +256,101 @@ async function getAllClinicsToEdit() {
     }
 }
 
-// async function editClinic() {
-//     let name;
-//     let id;
-//     const regex = /^\d{2}\.\d{6}$/;
-//     p.intro(`${color.bgGreen(color.black(' Edit an existing clinic '))}`);
-//     id = await p.text({
-//         message: 'Enter the id of a clinic you want to edit:',
-//         placeholder: "111",
-//         validate: (value) => {
-//             if (!value || value.trim().length === 0) {
-//                 return 'Please enter a valid ID.';
-//             }
-//             const parsedValue = parseFloat(value.trim());
-//             if (isNaN(parsedValue) || parsedValue <= 0 || !Number.isInteger(parsedValue)) {
-//                 return 'Please enter a valid positive integer ID.';
-//             }
-//         },
-//     });
+async function editClinic() {
+    const clinicTable = await viewClinics(false);
+    let name;
+    let latitude;
+    let longitude;
+    let id;
+    const regex = /^\d{2}\.\d{6}$/;
+    p.intro(`${color.bgGreen(color.black(' Edit an existing clinic '))}`);
+    id = await p.text({
+        message: 'Enter the id of a clinic you want to edit:',
+        placeholder: "111",
+        validate: (value) => {
+            if (!value || value.trim().length === 0) {
+                return 'Please enter a valid ID.';
+            }
+            const parsedValue = parseFloat(value.trim());
+            if (isNaN(parsedValue) || parsedValue <= 0 || !Number.isInteger(parsedValue)) {
+                return 'Please enter a valid positive integer ID.';
+            }
+        },
+    });
+    const options = [
+        { value: 'name', label: 'Name' },
+        { value: 'latitude', label: 'Latitude' },
+        { value: 'longitude', label: 'Longitude' },
+    ];
+    
+    const fields = await p.multiselect({
+        message: 'Select what you want to update in a clinic (use spacebar to choose fields).',
+        options: options,
+        required: false,
+    });
+    
 
-//     const editClinic = await p.confirm({
-//         message: `Are you sure you want to edit clinic with this id ${id}?`,
-//     });
+    if (fields) {
+        const selectedValues = fields.map(field => {
+            const selectedOption = options.find(option => option.value === field);
+            return selectedOption ? selectedOption.value : null;
+        });
 
-//     if (!editClinic) {
-//         await showAdminMenu();
-//         return;
-//     }
+    }
+    if (fields.includes('name')){
+        name = await p.text({
+            message: 'Enter the new name for the clinics:',
+            placeholder: "NewName",
+            validate: (value) => {
+                if (!value || value.trim().length === 0) {
+                    return 'Please enter a valid name.';
+                }
+            },
+            },
+        );
+    }
 
-//     const editOptions = await p.select({
-//         message: 'What do you want to update?:',
-//         options: [
-//             { value: 'name', label: 'Name' },
-//             { value: 'longitude', label: 'Longitude' },
-//             { value: 'latitude', label: "Latitude" },
-//         ],
-//     });
+    if (fields.includes('latitude')){
+        latitude = await p.text({
+            message: 'Enter the new latitude for the clinics:',
+            placeholder: "12.123456",
+            validate: (value) => {
+                if (!value || value.trim().length == 0) return 'Please enter the coordinates of this clinic - only latitude.';
+                if (!regex.test(value.trim())) {
+                    return 'Invalid latitude format';
+                }
+            },
+        }
+        );
+    }
 
-//     switch (editOptions) {
-//         case 'name':
-//             name = await p.text({
-//                 message: 'Enter the new name of this clinic',
-//                 placeholder: "Smile",
-//                 validate: (value) => {
-//                     if (!value || value.trim().length === 0) {
-//                         return 'Please enter a valid name.';
-//                     }
-//                 },
-//             });
+    if (fields.includes('longitude')){
+        longitude = await p.text({
+            message: 'Enter the new longitude for the clinics:',
+            placeholder: "12.123456",
+            vvalidate: (value) => {
+                if (!value || value.trim().length == 0) return 'Please enter the coordinates of this clinic - only latitude.';
+                if (!regex.test(value.trim())) {
+                    return 'Invalid latitude format';
+                }
+            },
+        }
+        );
+    }
 
-//             try {
-//                 const { status } = await api.patch(`/clinics/${id}`, { name });
-//                 if (status !== 200) {
-//                     console.log("Something went wrong when editing the clinic");
-//                     return;
-//                 }
+      try {
+          const {status} = await api.patch(`/clinics/${id}`, {name, longitude, latitude})
+          if (status !== 200){
+            console.log("Something went wrong when editing the clinic")
+            await showAdminMenu()
+          } 
+          console.log("The clinic was successfully edited!")
+     } catch(error){
+        console.log("Some error occurred when editing the clinic")
+     }
+}
 
-//                 p.outro("The clinic was successfully edited!");
-//                 await showAdminMenu();
-//             } catch (error) {
-//                 console.log("An error occurred when editing this clinic");
-//             }
-//             break;
 
-//         case 'latitude':
-//             const latitude = await p.text({
-//                 message: 'Enter the new latitude of this clinic',
-//                 placeholder: "12.123456",
-//                 validate: (value) => {
-//                     if (!value || value.trim().length == 0) return 'Please enter the coordinates of this clinic - only latitude.';
-//                     if (!regex.test(value.trim())) {
-//                         return 'Invalid latitude format';
-//                     }
-//                 },
-//             });
-
-//             try {
-//                 const { status } = await api.patch(`/clinics/${id}`, { latitude });
-//                 if (status !== 200) {
-//                     console.log("Something went wrong when editing the clinic");
-//                     return;
-//                 }
-
-//                 p.outro("The clinic was successfully edited!");
-//                 await showAdminMenu();
-//             } catch (error) {
-//                 console.log("An error occurred when editing this clinic");
-//             }
-//             break;
-
-//         case 'longitude':
-//             const longitude = await p.text({
-//                 message: 'Enter the new longitude of this clinic',
-//                 placeholder: "12.123456",
-//                 validate: (value) => {
-//                     if (!value || value.trim().length == 0) return 'Please enter the coordinates of this clinic - only longitude.';
-//                     if (!regex.test(value.trim())) {
-//                         return 'Invalid longitude format';
-//                     }
-//                 },
-//             });
-
-//             try {
-//                 const { status } = await api.patch(`/clinics/${id}`, { longitude });
-//                 if (status !== 200) {
-//                     console.log("Something went wrong when editing the clinic");
-//                     return;
-//                 }
-
-//                 p.outro("The clinic was successfully edited!");
-//                 await showAdminMenu();
-//             } catch (error) {
-//                 console.log("An error occurred when editing this clinic");
-//             }
-//             break;
-
-//         default:
-//             await showAdminMenu();
-//             break;
-//     }
-// }
 
     
 
@@ -449,27 +424,30 @@ async function viewLogs() {
 
 }
 
-async function viewClinics(){
+async function viewClinics(printTable = true) {
     try {
-        const { data, status } =  await api.get(`/clinics`)
-        if (status !== 200){
-            console.log("Something went wrong when trying to fetch the clinics")
-            return
+        const { data, status } = await api.get(`/clinics`);
+        if (status !== 200) {
+            console.log("Something went wrong when trying to fetch the clinics");
+            return null; // Return null or handle error appropriately
         }
         const clinicTable = new Table({
             head: ["id", "Name", "Latitude", "Longitude"],
         });
 
-        data.clinics.forEach(clinic => clinicTable.push([clinic.id, clinic.name, clinic.latitude, clinic.longitude]))
-        p.intro(`${color.bgBlue(color.bgMagenta(' Clinics '))}`);
-        console.log(clinicTable.toString())
-        
+        data.clinics.forEach(clinic => clinicTable.push([clinic.id, clinic.name, clinic.latitude, clinic.longitude]));
+        if (printTable) {
+            p.intro(`${color.bgBlue(color.bgMagenta(' Clinics '))}`);
+            console.log(clinicTable.toString());
+        }
+
+        return clinicTable; // Return the clinicTable
     } catch (error) {
-        console.log(error)
-        console.log("An error occurred when trying to fetch the clinics")
+        console.log(error);
+        console.log("An error occurred when trying to fetch the clinics");
+        return null; // Return null or handle error appropriately
     }
 }
-
 
 async function assignDentist(){
     await viewClinics()
