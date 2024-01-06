@@ -215,7 +215,7 @@ async function addClinic() {
     }
 
 
-async function getAllClinics() {
+async function getAllClinicsToRemove() {
     try {
         const { data, status } =  await api.get(`/clinics`)
         if (status !== 200){
@@ -234,6 +234,154 @@ async function getAllClinics() {
         console.log("An error occurred when trying to fetch the clinics")
     }
 }
+
+
+async function getAllClinicsToEdit() {
+    try {
+        const { data, status } =  await api.get(`/clinics`)
+        if (status !== 200){
+            console.log("Something went wrong when trying to fetch the clinics")
+            return
+        }
+        const clinicTable = new Table({
+            head: ["id", "Name", "Latitude", "Longitude"],
+        });
+
+        data.clinics.forEach(clinic => clinicTable.push([clinic.id, clinic.name, clinic.latitude, clinic.longitude]))
+        console.log(clinicTable.toString())
+        await editClinic()
+    } catch (error) {
+        console.log(error)
+        console.log("An error occurred when trying to fetch the clinics")
+    }
+}
+
+// async function editClinic() {
+//     let name;
+//     let id;
+//     const regex = /^\d{2}\.\d{6}$/;
+//     p.intro(`${color.bgGreen(color.black(' Edit an existing clinic '))}`);
+//     id = await p.text({
+//         message: 'Enter the id of a clinic you want to edit:',
+//         placeholder: "111",
+//         validate: (value) => {
+//             if (!value || value.trim().length === 0) {
+//                 return 'Please enter a valid ID.';
+//             }
+//             const parsedValue = parseFloat(value.trim());
+//             if (isNaN(parsedValue) || parsedValue <= 0 || !Number.isInteger(parsedValue)) {
+//                 return 'Please enter a valid positive integer ID.';
+//             }
+//         },
+//     });
+
+//     const editClinic = await p.confirm({
+//         message: `Are you sure you want to edit clinic with this id ${id}?`,
+//     });
+
+//     if (!editClinic) {
+//         await showAdminMenu();
+//         return;
+//     }
+
+//     const editOptions = await p.select({
+//         message: 'What do you want to update?:',
+//         options: [
+//             { value: 'name', label: 'Name' },
+//             { value: 'longitude', label: 'Longitude' },
+//             { value: 'latitude', label: "Latitude" },
+//         ],
+//     });
+
+//     switch (editOptions) {
+//         case 'name':
+//             name = await p.text({
+//                 message: 'Enter the new name of this clinic',
+//                 placeholder: "Smile",
+//                 validate: (value) => {
+//                     if (!value || value.trim().length === 0) {
+//                         return 'Please enter a valid name.';
+//                     }
+//                 },
+//             });
+
+//             try {
+//                 const { status } = await api.patch(`/clinics/${id}`, { name });
+//                 if (status !== 200) {
+//                     console.log("Something went wrong when editing the clinic");
+//                     return;
+//                 }
+
+//                 p.outro("The clinic was successfully edited!");
+//                 await showAdminMenu();
+//             } catch (error) {
+//                 console.log("An error occurred when editing this clinic");
+//             }
+//             break;
+
+//         case 'latitude':
+//             const latitude = await p.text({
+//                 message: 'Enter the new latitude of this clinic',
+//                 placeholder: "12.123456",
+//                 validate: (value) => {
+//                     if (!value || value.trim().length == 0) return 'Please enter the coordinates of this clinic - only latitude.';
+//                     if (!regex.test(value.trim())) {
+//                         return 'Invalid latitude format';
+//                     }
+//                 },
+//             });
+
+//             try {
+//                 const { status } = await api.patch(`/clinics/${id}`, { latitude });
+//                 if (status !== 200) {
+//                     console.log("Something went wrong when editing the clinic");
+//                     return;
+//                 }
+
+//                 p.outro("The clinic was successfully edited!");
+//                 await showAdminMenu();
+//             } catch (error) {
+//                 console.log("An error occurred when editing this clinic");
+//             }
+//             break;
+
+//         case 'longitude':
+//             const longitude = await p.text({
+//                 message: 'Enter the new longitude of this clinic',
+//                 placeholder: "12.123456",
+//                 validate: (value) => {
+//                     if (!value || value.trim().length == 0) return 'Please enter the coordinates of this clinic - only longitude.';
+//                     if (!regex.test(value.trim())) {
+//                         return 'Invalid longitude format';
+//                     }
+//                 },
+//             });
+
+//             try {
+//                 const { status } = await api.patch(`/clinics/${id}`, { longitude });
+//                 if (status !== 200) {
+//                     console.log("Something went wrong when editing the clinic");
+//                     return;
+//                 }
+
+//                 p.outro("The clinic was successfully edited!");
+//                 await showAdminMenu();
+//             } catch (error) {
+//                 console.log("An error occurred when editing this clinic");
+//             }
+//             break;
+
+//         default:
+//             await showAdminMenu();
+//             break;
+//     }
+// }
+
+    
+
+        
+
+
 
 
 
@@ -301,6 +449,114 @@ async function viewLogs() {
 
 }
 
+
+async function assignDentist(){
+    try {
+        const { data, status } =  await api.get(`/clinics`)
+        if (status !== 200){
+            console.log("Something went wrong when trying to fetch the clinics")
+            return
+        }
+        const clinicTable = new Table({
+            head: ["id", "Name", "Latitude", "Longitude"],
+        });
+
+        data.clinics.forEach(clinic => clinicTable.push([clinic.id, clinic.name, clinic.latitude, clinic.longitude]))
+        p.intro(`${color.bgBlue(color.bgMagenta(' Clinics '))}`);
+        console.log(clinicTable.toString())
+        
+    } catch (error) {
+        console.log(error)
+        console.log("An error occurred when trying to fetch the clinics")
+    }
+    try {
+        let assignedCount = 0;
+        const { data, status } = await api.get('/dentists')
+        if (status !== 200){
+            console.log("Something went wrong when trying to fetch the dentists")
+            return
+        }
+        const dentistTable = new Table({
+            head: ["Dentist id", "Name", "Clinic id"],
+        });
+        
+        if (data.dentists.length > 0) {
+            data.dentists.forEach(dentist => {
+                if (dentist.clinic_id === null){
+                    assignedCount = assignedCount + 1;
+                    dentistTable.push([
+                        dentist.id,
+                        dentist.name,
+                        '' // If clinic_id is null, push an empty string
+                    ]);
+                } else {
+                    dentistTable.push([
+                        dentist.id,
+                        dentist.name,
+                        dentist.clinic_id
+                    ]);
+                }
+            });
+        p.intro(`${color.bgBlue(color.bgMagenta(' Dentists '))}`);
+        console.log(dentistTable.toString())
+        if (assignedCount > 0){
+            console.log(`${assignedCount} dentists are not assigned to any clinic.`)
+            const assign = await p.confirm({
+                message: 'Would you like to assign a dentist to a clinic?',
+              });
+            if (assign === false){
+                await showAdminMenu()
+            } else if (assign === true){
+                const dentist = await p.text({
+                    message: 'Enter the id of a dentist whom you want to assign to a clinic:',
+                    placeholder: "111",
+                    validate: (value) => {
+                        if (!value || value.trim().length === 0) {
+                            return 'Please enter a valid ID.';
+                        }
+                        const parsedValue = parseFloat(value.trim());
+                        if (isNaN(parsedValue) || parsedValue <= 0 || !Number.isInteger(parsedValue)) {
+                            return 'Please enter a valid positive integer ID.';
+                        }
+                    },
+                    },
+                );
+                const clinic = await p.text({
+                    message: 'Enter the id of a clinic to which you want to assign this dentist:',
+                    placeholder: "111",
+                    validate: (value) => {
+                        if (!value || value.trim().length === 0) {
+                            return 'Please enter a valid ID.';
+                        }
+                        const parsedValue = parseFloat(value.trim());
+                        if (isNaN(parsedValue) || parsedValue <= 0 || !Number.isInteger(parsedValue)) {
+                            return 'Please enter a valid positive integer ID.';
+                        }
+                    },
+                    },
+                );
+                console.log(dentist)
+                console.log(clinic)
+                try{
+                    const { status } = await api.patch(`/dentists/${dentist}`, {clinic})
+                    if (status !== 200){
+                        console.log("Some error occurred when assigning dentist to a clinic")
+                        await showAdminMenu()
+                        return
+                    }
+                    console.log("Dentist successfully assigned to a clinic!")
+                    await showAdminMenu()
+                } catch (error){
+                    console.log("Some error occurred when trying to assign a dentist to a clinic", error)
+                }
+            }
+        }
+        
+    } 
+} catch (error){
+    console.log("Some error occurred when trying to fetch dentists")
+}
+}
 async function showAdminMenu() {
     const adminMenuChoice = await p.select({
         message: 'Choose an option:',
@@ -308,6 +564,8 @@ async function showAdminMenu() {
             { value: 'addClinic', label: 'Add a new clinic' },
             { value: 'removeClinic', label: 'Remove clinic' },
             { value: 'viewLogs', label: "View logs"},
+            { value: 'editClinic', label: "Edit a clinic"}, 
+            { value: 'assignDentist', label: 'Assign a dentist to a clinic'},
             { value: 'logout', label: 'Log out' },
             { value: 'exit', label: 'Exit' },
         ],
@@ -320,7 +578,15 @@ async function showAdminMenu() {
             break;
         case 'removeClinic':
             p.intro(`${color.bgBlue(color.black(' Delete an existing clinic '))}`);
-            await getAllClinics();
+            await getAllClinicsToRemove();
+            break;
+        case 'editClinic':
+            p.intro(`${color.bgBlue(color.black(' Edit an existing clinic '))}`);
+            await getAllClinicsToEdit()
+            break;
+        case 'assignDentist':
+            p.intro(`${color.bgBlue(color.black(' Assign a dentist to a clinic '))}`);
+            await assignDentist();
             break;
         case 'logout':
             p.outro('See you soon!');
