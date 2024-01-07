@@ -32,7 +32,6 @@ async function getAppointments(){
                         confirmed_count = confirmed_count + 1;
                     }
                     table.push([
-                        appointment.appointment_id,
                         appointment.patient_name,
                         startTime,
                         endTime,
@@ -449,6 +448,57 @@ async function viewClinics(printTable = true) {
     }
 }
 
+async function viewTimeslots(){
+    try {
+        const { status, data } = await api.get(`/dentists/${state.userId}/timeslots`);
+
+        if (status === 200) {
+            if (data && data.timeslots && data.timeslots.length > 0) {
+                const timeslotTable = new Table({
+                    head: ["Timeslot ID", "Start Time", "End Time"],
+                    colWidths: [15, 30, 30],
+                });
+
+                data.timeslots.forEach((timeslot) => {
+                    const startTime = new Date(timeslot.start_time).toLocaleString();
+                    const endTime = new Date(timeslot.end_time).toLocaleString();
+
+                    timeslotTable.push([timeslot.id, startTime, endTime]);
+                });
+
+                console.log(timeslotTable.toString());
+            } else {
+                console.log('No timeslots found for the dentist.');
+            }
+        } else {
+            console.log('Failed to retrieve timeslots.');
+        }
+    } catch (error) {
+        console.error('Error occurred while fetching timeslots:', error.message);
+    }   
+}
+
+
+async function deleteTimeslot(){
+    const id = await p.text({
+        message: 'Enter the id of a timeslot that you want to delete',
+        validate: (value) => {
+            if (!value) return 'Please enter an id';
+        },
+    })
+    try {
+        const {status} = await api.delete(`/dentists/timeslots/${id}`)
+        if (status !== 200){
+            console.log("Some error occurred when trying to delete a timeslot")
+            await showMenu()
+        }
+        console.log("Successfully deleted a timeslot!")
+        await showMenu()
+    } catch(error){
+        console.log("Some error occurred when trying to delete a timeslot")
+    }
+}
+
 async function assignDentist(){
     await viewClinics()
     try {
@@ -664,7 +714,6 @@ async function showMenu() {
                                 confirmed_count = confirmed_count + 1;
                             }
                             table.push([
-                                appointment.appointment_id,
                                 appointment.patient_name,
                                 startTime,
                                 endTime,
@@ -758,61 +807,41 @@ async function showMenu() {
 
             case 'viewTimeslots':
                 p.intro(`${color.bgBlue(color.black(' View Timeslots '))}`);
-                try {
-                    const { status, data } = await api.get(`/dentists/${state.userId}/timeslots`);
-            
-                    if (status === 200) {
-                        if (data && data.timeslots && data.timeslots.length > 0) {
-                            const timeslotTable = new Table({
-                                head: ["Timeslot ID", "Start Time", "End Time"],
-                                colWidths: [15, 30, 30],
-                            });
-            
-                            data.timeslots.forEach((timeslot) => {
-                                const startTime = new Date(timeslot.start_time).toLocaleString();
-                                const endTime = new Date(timeslot.end_time).toLocaleString();
-            
-                                timeslotTable.push([timeslot.id, startTime, endTime]);
-                            });
-            
-                            console.log(timeslotTable.toString());
-                        } else {
-                            console.log('No timeslots found for the dentist.');
-                        }
-                    } else {
-                        console.log('Failed to retrieve timeslots.');
-                    }
-                } catch (error) {
-                    console.error('Error occurred while fetching timeslots:', error.message);
-                }
+                await viewTimeslots()
                 await showMenu();
-                break;            
+                break;    
+                     
         
         case 'cancel':
             p.intro(`${color.bgBlue(color.black(' Cancel an appointment '))}`);
             // Handle cancel an appointment
-            try {
-                const { status, data } = await api.get(`/appointments`);
-        
-                if (status === 200) {
-                    if (data.appointments.length > 0) {
-                        data.appointments.forEach(appointment => {
-                            const startTime = new Date(appointment.start_time).toLocaleString();
-                            const endTime = new Date(appointment.end_time).toLocaleString();
-                            if (appointment.confirmed === false){
-                                confirmed_count = confirmed_count + 1;
-                            }
-                            table.push([
-                                appointment.appointment_id,
-                                appointment.patient_name,
-                                startTime,
-                                endTime,
-                                appointment.confirmed ? 'Yes' : 'No',
-                                appointment.cancelled ? 'Yes' : 'No'
-                            ]);
-                        });
-                        console.log(table.toString())
-                        table.length = 0
+                try {
+                    const { status, data } = await api.get(`/appointments`);
+            
+                    if (status === 200) {
+                        if (data.appointments.length > 0) {
+                            const appointmentTable = new Table({
+                                head: ["Appointment id", "Patient name", "Starting time", "Ending time", "Confirmed", "Cancelled"],
+                            });
+            
+                            data.appointments.forEach(appointment => {
+                                const startTime = new Date(appointment.start_time).toLocaleString();
+                                const endTime = new Date(appointment.end_time).toLocaleString();
+                                if (appointment.confirmed === false){
+                                    confirmed_count = confirmed_count + 1;
+                                }
+                                appointmentTable.push([
+                                    appointment.appointment_id,
+                                    appointment.patient_name,
+                                    startTime,
+                                    endTime,
+                                    appointment.confirmed ? 'Yes' : 'No',
+                                    appointment.cancelled ? 'Yes' : 'No'
+                                ]);
+                            });
+            
+                        console.log(appointmentTable.toString())
+                        appointmentTable.length = 0
                             const cancel = await p.confirm({
                                 message: 'Would you like to cancel any of your upcoming appointments?',
                               });
@@ -852,7 +881,17 @@ async function showMenu() {
             break;
         case 'delete':
             p.intro(`${color.bgBlue(color.black(' Delete an appointment '))}`);
-            // Handle delete a published timeslot
+            await viewTimeslots()
+            const deletion = await p.confirm({
+                message: 'Would you like to delete any of your published timeslots?',
+              });
+            if (deletion === false){
+                await showMenu()
+                break
+            }
+            else if (deletion === true){
+                await deleteTimeslot()
+            }
             break;
         case 'logout':
             p.outro('See you soon!');
