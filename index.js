@@ -254,6 +254,36 @@ async function getAllClinicsToEdit() {
         console.log("An error occurred when trying to fetch the clinics")
     }
 }
+async function showStats(){
+    try {
+        const {status, data} = await api.get(`/statistics/number-searches`)
+            if (status !== 200){
+                console.log("Some error occurred when fetching statistics")
+                return
+            } 
+            p.outro(`${color.bgWhite(color.black(`${data.searches} searches for timeslots took place`))}`)
+        
+    } catch(error){
+        console.log(error)
+        console.log("Some error occurred when fetching statistics")
+        return
+    }
+
+    try {
+        const {status, data} = await api.get(`/statistics/timeslots-available`)
+        if (status !== 200){
+                console.log("Some error occurred when fetching statistics")
+                return
+            } 
+            p.outro(`${color.bgWhite(color.black(`${data.timeslots} timeslots are currently available`))}`)
+        
+    } catch(error){
+        console.log(error)
+        console.log("Some error occurred when fetching statistics")
+        return
+    }
+
+    }
 
 async function editClinic() {
     const clinicTable = await viewClinics(false);
@@ -599,6 +629,7 @@ async function showAdminMenu() {
             { value: 'viewLogs', label: "View logs"},
             { value: 'editClinic', label: "Edit a clinic"}, 
             { value: 'assignDentist', label: 'Assign a dentist to a clinic'},
+            { value: 'stats', label: 'See statistics'},
             { value: 'logout', label: 'Log out' },
             { value: 'exit', label: 'Exit' },
         ],
@@ -616,6 +647,10 @@ async function showAdminMenu() {
         case 'removeClinic':
             p.intro(`${color.bgBlue(color.black(' Delete an existing clinic '))}`);
             await getAllClinicsToRemove();
+            break;
+        case 'stats':
+            p.intro(`${color.bgBlue(color.black(' Statistics '))}`);
+            await showStats();
             break;
         case 'editClinic':
             p.intro(`${color.bgBlue(color.black(' Edit an existing clinic '))}`);
