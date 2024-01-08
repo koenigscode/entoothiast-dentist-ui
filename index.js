@@ -287,6 +287,8 @@ async function showStats(){
 
 async function editClinic() {
     const clinicTable = await viewClinics(false);
+    p.intro(`${color.bgGreen(color.black(' Clinics '))}`);
+    console.log(clinicTable.toString())
     let name;
     let latitude;
     let longitude;
@@ -654,7 +656,7 @@ async function showAdminMenu() {
             break;
         case 'editClinic':
             p.intro(`${color.bgBlue(color.black(' Edit an existing clinic '))}`);
-            await getAllClinicsToEdit()
+            await editClinic()
             break;
         case 'assignDentist':
             p.intro(`${color.bgBlue(color.black(' Assign a dentist to a clinic '))}`);
