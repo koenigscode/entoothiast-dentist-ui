@@ -12,8 +12,10 @@
     "@clack/prompts": "^0.7.0",
     "axios": "^1.6.2",
     "bcrypt": "^5.1.1",
+    "clack": "^0.1.0",
     "cli-table": "^0.3.11",
     "dotenv": "^16.3.1",
+    "keypress": "^0.2.1",
     "picocolors": "^1.0.0"
   }
 }
