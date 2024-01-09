@@ -1,34 +1,3 @@
-
-    
-       
-
-
-
-
-// async function getNofifs(){
-//     try {
-//         const { status, data } = await api.get(`/users/${state.userId}/notifications`);
-//         if (status !== 200) {
-//             console.log("An error occurred when fetching notifications");
-//             return 0;
-//         }
-//         return data.notifications.length;
-//     } catch(error){
-//         console.log(error)
-//     }
-// }
-
-// let unreadNotifications = await getNofifs()
-
-
-
-
-
-
-
-
-
-
 import AdminMenu from './AdminMenu.js'; 
 import axios from "axios";
 import * as p from '@clack/prompts';
