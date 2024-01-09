@@ -4,6 +4,13 @@ import main from './index.js';
 import Table from 'cli-table';
 
 
+
+
+
+
+
+
+
 class DentistMenu {
     constructor(api, state) {
         this.api = api;
@@ -11,6 +18,11 @@ class DentistMenu {
     }
 
     async showMenu() {
+        const notificationCount = await this.getNofifsCount();
+
+        p.intro(`${color.bgYellow(color.black(` You have ${notificationCount} unread notifications `))}`);
+        await new Promise((resolve) => setTimeout(resolve, 3000)); 
+        console.clear(); // Clear the console after 3 seconds
         const menuChoice = await p.select({
             message: 'Choose an option:',
             options: [
@@ -26,6 +38,11 @@ class DentistMenu {
             ],
         });
         switch (menuChoice) {
+            case 'notifs':
+                p.intro(`${color.bgYellow(color.black(' View unread notifications '))}`);
+                await this.readNotifs()
+                await this.showMenu()
+                break
             case 'update':
                 p.intro(`${color.bgYellow(color.black(' Update Account Details '))}`);
                 await this.updateUser()
@@ -310,23 +327,77 @@ class DentistMenu {
         }
     }
 
-    async deleteTimeslot() {
-        const id = await p.text({
-            message: 'Enter the id of a timeslot that you want to delete',
-            validate: (value) => {
-                if (!value) return 'Please enter an id';
-            },
-        })
-        try {
-            const { status } = await this.api.delete(`/dentists/timeslots/${id}`)
-            if (status !== 200) {
-                console.log("Some error occurred when trying to delete a timeslot")
-            }
-            console.log("Successfully deleted a timeslot!")
-        } catch (error) {
+async deleteTimeslot(){
+    const id = await p.text({
+        message: 'Enter the id of a timeslot that you want to delete',
+        validate: (value) => {
+            if (!value) return 'Please enter an id';
+        },
+    })
+    try {
+        const {status} = await this.api.delete(`/dentists/timeslots/${id}`)
+        if (status !== 200){
             console.log("Some error occurred when trying to delete a timeslot")
         }
+        console.log("Successfully deleted a timeslot!")
+    } catch(error){
+        console.log("Some error occurred when trying to delete a timeslot")
     }
+}
+
+async getNofifsCount(){
+    try {
+        const { status, data } = await this.api.get(`/users/${this.state.userId}/notifications`);
+        if (status !== 200) {
+            console.log("An error occurred when fetching notifications");
+            return 0;
+        }
+        let unreadCount = 0;
+        data.notifications.forEach(notification => {
+            if (!notification.read) {
+                unreadCount++;
+            }
+        });
+        
+        return unreadCount;
+    } catch(error){
+        console.log(error)
+    }
+}
+
+async readNotifs(){
+    try {
+        const { status, data } = await this.api.get(`/users/${this.state.userId}/notifications`);
+        if (status !== 200) {
+            console.log("An error occurred when fetching notifications");
+            return 0;
+        }
+        const notifsTable = new Table({
+            head: ["Topic", "Message"],
+        });
+
+        data.notifications.forEach((notification) => {
+            if (notification.read === false){
+            notifsTable.push([notification.topic, notification.message]);
+            }
+        });
+
+        console.log(notifsTable.toString());
+        try{
+            const {status} = await this.api.patch(`/users/${this.state.userId}/notifications`)
+            if (status !== 200){
+                console.log("Some error occurred when reading the notifications")
+            }
+            return 
+        } catch(error){
+            console.log(error)
+        }
+
+    } catch(error){
+        console.log(error)
+    }
+}
+
 
 
 }
